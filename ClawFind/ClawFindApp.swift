@@ -1,6 +1,6 @@
 //
-//  MyApp01App.swift
-//  MyApp01
+//  ClawFindApp.swift
+//  ClawFind
 //
 //  Created by Qiang on 2026/3/31.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct MyApp01App: App {
+struct ClawFindApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

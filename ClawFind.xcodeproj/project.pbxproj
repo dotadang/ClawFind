@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		F72759D62F7BCFF700B86DC6 /* MyApp01.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyApp01.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F72759D62F7BCFF700B86DC6 /* ClawFind.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClawFind.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		F72759D82F7BCFF700B86DC6 /* MyApp01 */ = {
+		F72759D82F7BCFF700B86DC6 /* ClawFind */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = MyApp01;
+			path = ClawFind;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		F72759CD2F7BCFF700B86DC6 = {
 			isa = PBXGroup;
 			children = (
-				F72759D82F7BCFF700B86DC6 /* MyApp01 */,
+				F72759D82F7BCFF700B86DC6 /* ClawFind */,
 				F72759D72F7BCFF700B86DC6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +40,7 @@
 		F72759D72F7BCFF700B86DC6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				F72759D62F7BCFF700B86DC6 /* MyApp01.app */,
+				F72759D62F7BCFF700B86DC6 /* ClawFind.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		F72759D52F7BCFF700B86DC6 /* MyApp01 */ = {
+		F72759D52F7BCFF700B86DC6 /* ClawFind */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F72759E12F7BCFF900B86DC6 /* Build configuration list for PBXNativeTarget "MyApp01" */;
+			buildConfigurationList = F72759E12F7BCFF900B86DC6 /* Build configuration list for PBXNativeTarget "ClawFind" */;
 			buildPhases = (
 				F72759D22F7BCFF700B86DC6 /* Sources */,
 				F72759D32F7BCFF700B86DC6 /* Frameworks */,
@@ -61,13 +61,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				F72759D82F7BCFF700B86DC6 /* MyApp01 */,
+				F72759D82F7BCFF700B86DC6 /* ClawFind */,
 			);
-			name = MyApp01;
+			name = ClawFind;
 			packageProductDependencies = (
 			);
-			productName = MyApp01;
-			productReference = F72759D62F7BCFF700B86DC6 /* MyApp01.app */;
+			productName = ClawFind;
+			productReference = F72759D62F7BCFF700B86DC6 /* ClawFind.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = F72759D12F7BCFF700B86DC6 /* Build configuration list for PBXProject "MyApp01" */;
+			buildConfigurationList = F72759D12F7BCFF700B86DC6 /* Build configuration list for PBXProject "ClawFind" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -99,7 +99,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				F72759D52F7BCFF700B86DC6 /* MyApp01 */,
+				F72759D52F7BCFF700B86DC6 /* ClawFind */,
 			);
 		};
 /* End PBXProject section */
@@ -261,7 +261,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.adang.MyApp01;
+				PRODUCT_BUNDLE_IDENTIFIER = com.adang.ClawFind;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -291,7 +291,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.adang.MyApp01;
+				PRODUCT_BUNDLE_IDENTIFIER = com.adang.ClawFind;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -306,7 +306,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		F72759D12F7BCFF700B86DC6 /* Build configuration list for PBXProject "MyApp01" */ = {
+		F72759D12F7BCFF700B86DC6 /* Build configuration list for PBXProject "ClawFind" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F72759DF2F7BCFF900B86DC6 /* Debug */,
@@ -315,7 +315,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F72759E12F7BCFF900B86DC6 /* Build configuration list for PBXNativeTarget "MyApp01" */ = {
+		F72759E12F7BCFF900B86DC6 /* Build configuration list for PBXNativeTarget "ClawFind" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F72759E22F7BCFF900B86DC6 /* Debug */,
