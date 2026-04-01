@@ -17,13 +17,18 @@ final class SearchViewModel: ObservableObject {
     @Published var statusMessage = "准备就绪"
     @Published var folderBookmarkData: Data?
     @Published var errorMessage: String?
-    @Published var includeHiddenFiles = false
+    @Published var includeHiddenFiles = true
+    @Published var isMonitoring = false
 
     private let db = DatabaseManager.shared
     private var debounceTask: Task<Void, Never>?
+    private var fileMonitor: FileSystemMonitor?
 
     init() {
         loadPersistedMeta()
+        if let firstFolder = indexedFolderPaths.first {
+            startMonitoring(firstFolder)
+        }
         statusMessage = totalIndexedCount > 0 ? "已加载本地索引，输入关键词开始搜索" : "准备就绪"
     }
 
@@ -32,6 +37,7 @@ final class SearchViewModel: ObservableObject {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
+        panel.showsHiddenFiles = includeHiddenFiles
         panel.prompt = "选择目录"
         panel.message = "选择一个要建立索引的目录"
 
@@ -56,6 +62,7 @@ final class SearchViewModel: ObservableObject {
                 lastUpdatedAt = Date()
                 statusMessage = "索引完成，共 \(scannedItems.count) 条。输入关键词开始搜索"
                 displayItems = []
+                startMonitoring(selectedPath)
             } catch {
                 errorMessage = "索引写入失败：\(error.localizedDescription)"
                 statusMessage = "索引失败"
@@ -119,6 +126,53 @@ final class SearchViewModel: ObservableObject {
         let targetURL = folderURL.appending(path: item.relativePath)
         return action(targetURL)
     }
+
+    // MARK: - File Monitoring
+
+    private func startMonitoring(_ path: String) {
+        fileMonitor?.stop()
+        fileMonitor = FileSystemMonitor { [weak self] in
+            Task { @MainActor in
+                self?.handleFileSystemChanges()
+            }
+        }
+        fileMonitor?.start(path: path)
+        isMonitoring = true
+    }
+
+    private var isUpdating = false
+
+    private func handleFileSystemChanges() {
+        guard let folderPath = indexedFolderPaths.first, !isIndexing, !isUpdating else { return }
+
+        isUpdating = true
+        statusMessage = "检测到文件变化，正在更新索引…"
+
+        Task {
+            let url = URL(fileURLWithPath: folderPath)
+            let scannedItems = await scanFolder(at: url)
+            let database = db
+
+            // 数据库操作放到后台线程，避免阻塞 UI
+            do {
+                try await Task.detached {
+                    try database.incrementalUpdate(folderPath: folderPath, items: scannedItems)
+                }.value
+            } catch {
+                statusMessage = "增量更新失败：\(error.localizedDescription)"
+                isUpdating = false
+                return
+            }
+
+            totalIndexedCount = db.loadItemCount()
+            lastUpdatedAt = Date()
+            runSearch()
+            statusMessage = debouncedQuery.isEmpty ? "显示全部结果（最多 500 条）" : "找到 \(displayItems.count) 条结果（最多显示 500 条）"
+            isUpdating = false
+        }
+    }
+
+    // MARK: - Scanning
 
     private func scanFolder(at rootURL: URL) async -> [SearchItem] {
         let includeHidden = includeHiddenFiles

@@ -210,7 +210,7 @@ struct ContentView: View {
                     .font(.headline)
 
                 statusCard(title: "扫描范围", value: viewModel.indexedFolderPaths.isEmpty ? "尚未选择目录" : viewModel.indexedFolderPaths.joined(separator: "\n"), icon: "folder.badge.plus")
-                statusCard(title: "搜索模式", value: "SQLite 查询 + 防抖搜索", icon: "magnifyingglass")
+                statusCard(title: "文件监控", value: viewModel.isMonitoring ? "正在监控文件变化" : "未启动监控", icon: viewModel.isMonitoring ? "eye" : "eye.slash")
                 statusCard(title: "当前状态", value: viewModel.statusMessage, icon: "bolt.horizontal")
 
                 Spacer()

@@ -160,6 +160,99 @@ final class DatabaseManager {
         }
     }
 
+    // MARK: - Incremental Update
+
+    func incrementalUpdate(folderPath: String, items: [SearchItem]) throws {
+        try executeOrThrow("BEGIN TRANSACTION;")
+
+        do {
+            // 批量 upsert
+            var upsertStmt: OpaquePointer?
+            let upsertSQL = """
+            INSERT INTO indexed_files (path, relative_path, name, item_type, modified_at, size_bytes)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(path) DO UPDATE SET
+                relative_path = excluded.relative_path,
+                name = excluded.name,
+                item_type = excluded.item_type,
+                modified_at = excluded.modified_at,
+                size_bytes = excluded.size_bytes;
+            """
+            guard sqlite3_prepare_v2(db, upsertSQL, -1, &upsertStmt, nil) == SQLITE_OK else {
+                throw DatabaseError.prepareFailed(lastErrorMessage)
+            }
+            defer { sqlite3_finalize(upsertStmt) }
+
+            for item in items {
+                sqlite3_reset(upsertStmt)
+                sqlite3_clear_bindings(upsertStmt)
+                sqlite3_bind_text(upsertStmt, 1, item.path, -1, SQLITE_TRANSIENT)
+                sqlite3_bind_text(upsertStmt, 2, item.relativePath, -1, SQLITE_TRANSIENT)
+                sqlite3_bind_text(upsertStmt, 3, item.name, -1, SQLITE_TRANSIENT)
+                sqlite3_bind_text(upsertStmt, 4, item.type.rawValue, -1, SQLITE_TRANSIENT)
+                if let modifiedDate = item.modifiedDate {
+                    sqlite3_bind_double(upsertStmt, 5, modifiedDate.timeIntervalSince1970)
+                } else {
+                    sqlite3_bind_null(upsertStmt, 5)
+                }
+                if let size = item.sizeInBytes {
+                    sqlite3_bind_int64(upsertStmt, 6, size)
+                } else {
+                    sqlite3_bind_null(upsertStmt, 6)
+                }
+                guard sqlite3_step(upsertStmt) == SQLITE_DONE else {
+                    throw DatabaseError.stepFailed(lastErrorMessage)
+                }
+            }
+
+            // 删除磁盘上已不存在的记录：路径以 folderPath 开头但不在新扫描结果中
+            let allCurrentPaths = Set(items.map(\.path))
+            var selectStmt: OpaquePointer?
+            let selectSQL = "SELECT id, path FROM indexed_files WHERE path LIKE ?;"
+            guard sqlite3_prepare_v2(db, selectSQL, -1, &selectStmt, nil) == SQLITE_OK else {
+                throw DatabaseError.prepareFailed(lastErrorMessage)
+            }
+            defer { sqlite3_finalize(selectStmt) }
+
+            let prefix = folderPath.hasSuffix("/") ? folderPath + "%" : folderPath + "/%"
+            sqlite3_bind_text(selectStmt, 1, prefix, -1, SQLITE_TRANSIENT)
+
+            var idsToDelete: [Int64] = []
+            while sqlite3_step(selectStmt) == SQLITE_ROW {
+                let id = sqlite3_column_int64(selectStmt, 0)
+                guard let pathC = sqlite3_column_text(selectStmt, 1) else { continue }
+                let path = String(cString: pathC)
+                if !allCurrentPaths.contains(path) {
+                    idsToDelete.append(id)
+                }
+            }
+
+            if !idsToDelete.isEmpty {
+                let placeholders = idsToDelete.map { _ in "?" }.joined(separator: ",")
+                let deleteSQL = "DELETE FROM indexed_files WHERE id IN (\(placeholders));"
+                var deleteStmt: OpaquePointer?
+                guard sqlite3_prepare_v2(db, deleteSQL, -1, &deleteStmt, nil) == SQLITE_OK else {
+                    throw DatabaseError.prepareFailed(lastErrorMessage)
+                }
+                defer { sqlite3_finalize(deleteStmt) }
+                for (i, id) in idsToDelete.enumerated() {
+                    sqlite3_bind_int64(deleteStmt, Int32(i + 1), id)
+                }
+                guard sqlite3_step(deleteStmt) == SQLITE_DONE else {
+                    throw DatabaseError.stepFailed(lastErrorMessage)
+                }
+            }
+
+            // 更新文件夹的 last_scan_at
+            try executeOrThrow("UPDATE indexed_folders SET last_scan_at = \(Date().timeIntervalSince1970) WHERE path = '\(folderPath)';")
+
+            try executeOrThrow("COMMIT;")
+        } catch {
+            execute("ROLLBACK;")
+            throw error
+        }
+    }
+
     // MARK: - Query Operations
 
     func loadIndexedFolders() -> [String] {
@@ -212,7 +305,7 @@ final class DatabaseManager {
         var conditions: [String] = []
 
         if !query.isEmpty {
-            conditions.append("(name LIKE ? OR path LIKE ?)")
+            conditions.append("name LIKE ?")
         }
         if type != .all {
             conditions.append("item_type = ?")
@@ -237,8 +330,6 @@ final class DatabaseManager {
         var bindIndex: Int32 = 1
         if !query.isEmpty {
             let pattern = "%\(query)%"
-            sqlite3_bind_text(stmt, bindIndex, pattern, -1, SQLITE_TRANSIENT)
-            bindIndex += 1
             sqlite3_bind_text(stmt, bindIndex, pattern, -1, SQLITE_TRANSIENT)
             bindIndex += 1
         }
